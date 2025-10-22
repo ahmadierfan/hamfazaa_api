@@ -138,7 +138,7 @@ class MVerificationcodeController extends Controller
 
         $message = "کد تایید همفضا: " . $verificationcode;
 
-        //$this->sendSms($message, $sendedto);
+        $this->sendSms($message, $sendedto);
 
         $this->createRecord($sendedto, $verificationcode, 2);
     }
