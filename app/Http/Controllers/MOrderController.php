@@ -52,6 +52,21 @@ class MOrderController extends Controller
 
         return $data;
     }
+    function showForTransaction()
+    {
+        $data = m_order::select(
+            'm_orders.pk_order',
+            'm_orders.maxusers',
+            'm_orders.totalprice',
+            'b_periods.period',
+            'm_plans.plan'
+        )
+            ->join('m_plans', 'm_plans.pk_plan', '=', 'm_orders.fk_plan')
+            ->join('b_periods', 'b_periods.pk_period', '=', 'm_orders.fk_period')
+            ->get();
+
+        return $data;
+    }
     function justCreate($fk_user, $fk_product, $fk_plan, $maxusers, $totalprice, $fk_period)
     {
         $data = m_order::create(

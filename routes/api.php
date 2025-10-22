@@ -9,6 +9,7 @@ use App\Http\Controllers\ZarinpalController;
 use App\Http\Controllers\MOrderController;
 use App\Http\Controllers\BPlanController;
 
+
 Route::post('/pay', [MOrderController::class, 'create']);
 Route::get('/callback', [ZarinpalController::class, 'callback']);
 Route::get('/plans', [BPlanController::class, 'index']);
@@ -16,6 +17,7 @@ Route::get('/plans', [BPlanController::class, 'index']);
 Route::middleware(['auth:api'])->group(function () {
     //order
     Route::get('plan-detail', [BPlanController::class, 'show']);
+    Route::get('order-detail', [MOrderController::class, 'showForTransaction']);
 
     //users 
     Route::get('company-users', [UserController::class, 'forCompany']);
