@@ -16,8 +16,8 @@ class MProductSeeder extends Seeder
         DB::table('m_products')->insert([
             [
                 'pk_product' => 1,
-                'product' => 'سیستم مدیریت تعمیرات',
-                'productsec' => 'FSM',
+                'product' => 'سیستم مدیریت جلسات',
+                'productsec' => 'Meeting',
                 'isenable' => true,
                 'created_at' => now(),
                 'updated_at' => now(),

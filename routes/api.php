@@ -5,10 +5,20 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\MVerificationcodeController;
 use App\Http\Controllers\SRoomeventController;
 use App\Http\Controllers\MRoomController;
+use App\Http\Controllers\ZarinpalController;
+use App\Http\Controllers\MOrderController;
+use App\Http\Controllers\BPlanController;
+
+Route::post('/pay', [MOrderController::class, 'create']);
+Route::get('/callback', [ZarinpalController::class, 'callback']);
+Route::get('/plans', [BPlanController::class, 'index']);
 
 Route::middleware(['auth:api'])->group(function () {
+    //order
+    Route::get('plan-detail', [BPlanController::class, 'show']);
+
     //users 
-    Route::get('cmopany-users', [UserController::class, 'forCompany']);
+    Route::get('company-users', [UserController::class, 'forCompany']);
     Route::post('company-create-update-user', [UserController::class, 'createUpdate']);
     Route::post('company-delete-user', [UserController::class, 'delete']);
 

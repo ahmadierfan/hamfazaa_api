@@ -14,11 +14,10 @@ return new class extends Migration {
             $table->foreignId('fk_company')->constrained('m_companies', 'pk_company');
             $table->foreignId('fk_product')->constrained('m_products', 'pk_product');
             $table->foreignId('fk_plan')->constrained('b_plans', 'pk_plan');
-            $table->foreignId('fk_gatewaytransaction')->nullable()->constrained('m_gatewaytransactions', 'pk_gatewaytransaction');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->integer('max_users')->nullable()->comment('تعداد کاربران مجاز برای نرم‌افزار');
-            $table->integer('current_users')->default(0)->comment('تعداد کاربران فعلی');
+            $table->date('startdate');
+            $table->date('enddate');
+            $table->integer('maxusers')->nullable()->comment('تعداد کاربران مجاز برای نرم‌افزار');
+            $table->integer('currentusers')->default(0)->comment('تعداد کاربران فعلی');
             $table->timestamps();
         });
 

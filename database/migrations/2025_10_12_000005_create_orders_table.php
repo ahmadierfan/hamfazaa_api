@@ -13,7 +13,8 @@ return new class extends Migration {
             $table->foreignId('fk_user')->constrained('users', 'id');
             $table->foreignId('fk_product')->constrained('m_products', 'pk_product');
             $table->foreignId('fk_plan')->constrained('b_plans', 'pk_plan');
-            $table->integer('max_users');
+            $table->foreignId('fk_period')->constrained('b_periods', 'pk_period');
+            $table->integer('maxusers');
             $table->decimal('totalprice', 12, 2)->default(0);
             $table->string('paymentmethod')->nullable();
             $table->timestamps();

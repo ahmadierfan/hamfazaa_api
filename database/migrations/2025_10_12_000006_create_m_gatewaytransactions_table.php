@@ -16,7 +16,8 @@ return new class extends Migration {
             $table->foreignId('fk_order')->nullable()->constrained('m_orders', 'pk_order');
             $table->foreignId('fk_paymentstatus')->constrained('b_paymentstatuses', 'pk_paymentstatus');
             $table->unsignedInteger('amount');
-            $table->string('gateway', 50);
+            $table->string('authority', 150)->nullable();
+            $table->string('gateway', 50)->nullable();
             $table->string('refid', 100)->nullable();
             $table->string('token', 100)->nullable();
             $table->string('terminal', 40)->nullable();

@@ -25,9 +25,10 @@ class MVerificationcodeController extends Controller
 
         $user = $User->showWithColumn('mobile', $sendedto);
 
-        if (!$user)
-            return $this->justCreate($sendedto);
+        if ($user)
+            return $this->serverErrorResponse(__('messages.error.duplicate_user'));
 
+        return $this->justCreate($sendedto);
     }
     function companyRegisterVerify(Request $request, UserController $User, AuthController $Auth)
     {
@@ -52,7 +53,7 @@ class MVerificationcodeController extends Controller
         return $Auth->optLogin($user);
     }
 
-    function companyLogin(Request $request, UserController $User, AuthController $Auth)
+    function companyLogin(Request $request, UserController $User, AuthController $Auth, MSubscriptionController $MSubscription)
     {
         $request->validate([
             'sendedto' => 'required|string|max:20',
@@ -69,6 +70,9 @@ class MVerificationcodeController extends Controller
         $code->update(['is_used' => true]);
 
         $user = $User->showManagerWithMobile($sendedto);
+        $fk_company = $user->fk_company;
+
+        $checkCompanySub = $MSubscription->checkCompanySub($fk_company);
 
         return $Auth->optLogin($user);
     }
@@ -134,7 +138,7 @@ class MVerificationcodeController extends Controller
 
         $message = "کد تایید همفضا: " . $verificationcode;
 
-        $this->sendSms($message, $sendedto);
+        //$this->sendSms($message, $sendedto);
 
         $this->createRecord($sendedto, $verificationcode, 2);
     }
