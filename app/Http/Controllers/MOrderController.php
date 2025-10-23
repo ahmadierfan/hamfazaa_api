@@ -59,9 +59,9 @@ class MOrderController extends Controller
             'm_orders.maxusers',
             'm_orders.totalprice',
             'b_periods.period',
-            'm_plans.plan'
+            'b_plans.plan'
         )
-            ->join('m_plans', 'm_plans.pk_plan', '=', 'm_orders.fk_plan')
+            ->join('b_plans', 'b_plans.pk_plan', '=', 'm_orders.fk_plan')
             ->join('b_periods', 'b_periods.pk_period', '=', 'm_orders.fk_period')
             ->get();
 
