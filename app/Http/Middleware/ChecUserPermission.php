@@ -21,12 +21,12 @@ class ChecUserPermission
             return response()->json(['message' => __('messages.error.company_not_found')], 403);
         $subscription = DB::table('m_subscriptions')
             ->where('fk_company', $userCompanyId)
-            ->orderByDesc('end_date')
+            ->orderByDesc('enddate')
             ->first();
         if (!$subscription)
             return response()->json(['message' => __('messages.error.subscription_not_found')], 403);
         $today = Carbon::today();
-        if ($today->gt(Carbon::parse($subscription->end_date)))
+        if ($today->gt(Carbon::parse($subscription->enddate)))
             return response()->json(['message' => __('messages.error.subscription_expired')], 403);
 
         return $next($request);

@@ -12,14 +12,14 @@ class MSubscriptionController extends Controller
     {
         $subscription = DB::table('m_subscriptions')
             ->where('fk_company', $userCompanyId)
-            ->orderByDesc('end_date')
+            ->orderByDesc('enddate')
             ->first();
         if (!$subscription) {
             $message = _('messages.error.subscription_not_found');
             $code = 2;
         }
         $today = Carbon::today();
-        if ($today->gt(Carbon::parse($subscription->end_date))) {
+        if ($today->gt(Carbon::parse($subscription->enddate))) {
             $message = __('messages.error.subscription_expired');
             $code = 2;
         }
