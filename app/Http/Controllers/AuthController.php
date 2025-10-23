@@ -23,11 +23,16 @@ class AuthController extends Controller
     }
     function tokenGenerator($user)
     {
+        $MSubscription = new MSubscriptionController();
+
         $token = JWTAuth::fromUser($user);
+
+        $remainingDays = $MSubscription->showRemainingDay($user);
 
         return response()->json([
             'token' => $token,
             'token_type' => 'bearer',
+            'remainingDays' => $remainingDays,
             'message' => __('auth.login_success'),
             'user' => $user
         ]);

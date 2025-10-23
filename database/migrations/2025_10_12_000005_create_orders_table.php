@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('fk_plan')->constrained('b_plans', 'pk_plan');
             $table->foreignId('fk_period')->constrained('b_periods', 'pk_period');
             $table->integer('maxusers');
-            $table->decimal('totalprice', 12, 2)->default(0);
+            $table->integer('totalprice')->nullable();
             $table->string('paymentmethod')->nullable();
             $table->timestamps();
         });

@@ -52,6 +52,7 @@ Route::middleware(['auth:api'])->group(function () {
 });
 
 Route::prefix('auth')->group(function () {
+    Route::post('company-otp-send', [MVerificationcodeController::class, 'companyOtpSend']);
     Route::post('company-otp-register', [MVerificationcodeController::class, 'companyOtpRegister']);
     Route::post('company-otp-register-verify', [MVerificationcodeController::class, 'companyRegisterVerify']);
     Route::post('company-login', [MVerificationcodeController::class, 'companyLogin']);

@@ -15,6 +15,21 @@ class MVerificationcodeController extends Controller
 {
     use ResponseTrait;
 
+    function companyOtpSend(Request $request, UserController $User)
+    {
+        $request->validate([
+            'sendedto' => 'required|string|max:20'
+        ]);
+        $sendedto = $request->input('sendedto');
+
+        $user = $User->showWithColumn('mobile', $sendedto);
+
+        if (!$user)
+            return $this->serverErrorResponse(__('messages.error.not_found'));
+
+        return $this->justCreate($sendedto);
+    }
+
     //manager verification
     function companyOtpRegister(Request $request, UserController $User)
     {
@@ -30,7 +45,7 @@ class MVerificationcodeController extends Controller
 
         return $this->justCreate($sendedto);
     }
-    function companyRegisterVerify(Request $request, UserController $User, AuthController $Auth)
+    function companyRegisterVerify(Request $request, UserController $User, AuthController $Auth, MSubscriptionController $MSubscription)
     {
         $request->validate([
             'sendedto' => 'required|string|max:20',
@@ -43,12 +58,15 @@ class MVerificationcodeController extends Controller
         $code = $this->justVerify($sendedto, $verificationcode);
         if (!$code)
             return $this->serverErrorResponse(__('messages.error.code_invalid'));
+
         $code->update(['is_used' => true]);
 
         $user = $User->showWithColumn('mobile', $sendedto);
 
         if (!$user)
             $user = $User->managerCreateWithMobile($sendedto, $name);
+
+        $MSubscription->createTrial($user);
 
         return $Auth->optLogin($user);
     }
@@ -70,13 +88,13 @@ class MVerificationcodeController extends Controller
         $code->update(['is_used' => true]);
 
         $user = $User->showManagerWithMobile($sendedto);
-        $fk_company = $user->fk_company;
 
-        $checkCompanySub = $MSubscription->checkCompanySub($fk_company);
+        $message = "به همفضا خوش اومدین. اگه موردی بود که می خواستین با ما مطرح کنین با این شماره تماس بگیرین. 02128427044";
+
+        $this->sendSms($message, $sendedto);
 
         return $Auth->optLogin($user);
     }
-
 
 
     //user verfivation
@@ -94,20 +112,24 @@ class MVerificationcodeController extends Controller
             return $this->serverErrorResponse(__('messages.error.not_found'));
 
         return $this->justCreate($sendedto);
-
     }
 
 
-
-    public function userVerifyOtp(Request $request, AuthController $Auth, UserController $User)
+    public function userVerifyOtp(Request $request, AuthController $Auth, UserController $User, MSubscriptionController $MSubscription)
     {
 
         $request->validate([
             'sendedto' => 'required|string',
-            'verificationcode' => 'required|string'
+            'verificationcode' => 'required|string',
+            'companyId' => 'required|string'
         ]);
         $sendedto = $request->input('sendedto');
         $verificationcode = $request->input('verificationcode');
+        $companyId = $request->input('companyId');
+
+        $checkCompanySub = $MSubscription->checkCompanySub($companyId);
+        if ($checkCompanySub['code'] == 2)
+            return $this->serverErrorResponse(__('messages.error.subscription_not_found'));
 
         $code = $this->justVerify($sendedto, $verificationcode);
 
@@ -136,7 +158,7 @@ class MVerificationcodeController extends Controller
             ], 400);
         }
 
-        $message = "کد تایید همفضا: " . $verificationcode;
+        $message = "کد ورود به همفضا: " . $verificationcode;
 
         $this->sendSms($message, $sendedto);
 

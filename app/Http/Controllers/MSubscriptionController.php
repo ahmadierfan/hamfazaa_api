@@ -8,8 +8,49 @@ use App\Http\Controllers\MOrderController;
 
 class MSubscriptionController extends Controller
 {
+    function showRemainingDay($user)
+    {
+        $subscription = DB::table('m_subscriptions')
+            ->where('fk_company', $user->fk_company)
+            ->orderByDesc('enddate')
+            ->first();
+
+        if ($subscription->enddate) {
+            $enddate = $subscription->enddate;
+
+            $enddate = Carbon::parse($enddate); // تاریخ پایان
+            $today = Carbon::now(); // تاریخ امروز
+
+            $diffInDays = $today->diffInDays($enddate, false); // false یعنی اختلاف منفی هم برگرده
+
+            return $diffInDays;
+        }
+        return 0;
+
+    }
+    function createTrial($user)
+    {
+        $BPlan = new BPlanController();
+        $startdate = Carbon::now();
+
+        $enddate = $startdate->copy()->addDays(7);
+
+        $plan = $BPlan->justShow(1);
+
+        m_subscription::create([
+            'fk_company' => $user->fk_company,
+            'fk_product' => 1,
+            'fk_plan' => 1,
+            'startdate' => $startdate,
+            'enddate' => $enddate,
+            'maxusers' => $plan->maxusers,
+            'currentusers' => 1,
+        ]);
+    }
     function checkCompanySub($userCompanyId)
     {
+        $code = 1;
+
         $subscription = DB::table('m_subscriptions')
             ->where('fk_company', $userCompanyId)
             ->orderByDesc('enddate')
@@ -41,20 +82,19 @@ class MSubscriptionController extends Controller
         $startdate = Carbon::now();
 
         switch ($order->period) {
-            case 1: // ماهانه
+            case 1:
                 $enddate = $startdate->copy()->addMonth();
                 break;
 
-            case 2: // سه ماهه
+            case 2:
                 $enddate = $startdate->copy()->addMonths(3);
                 break;
 
-            case 3: // سالانه
+            case 3:
                 $enddate = $startdate->copy()->addYear();
                 break;
 
             default:
-                // مقدار پیش‌فرض مثلاً یک ماه
                 $enddate = $startdate->copy()->addMonth();
                 break;
         }

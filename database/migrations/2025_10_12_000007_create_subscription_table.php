@@ -16,8 +16,8 @@ return new class extends Migration {
             $table->foreignId('fk_plan')->constrained('b_plans', 'pk_plan');
             $table->date('startdate');
             $table->date('enddate');
-            $table->integer('maxusers')->nullable()->comment('تعداد کاربران مجاز برای نرم‌افزار');
-            $table->integer('currentusers')->default(0)->comment('تعداد کاربران فعلی');
+            $table->integer('maxusers')->nullable();
+            $table->integer('currentusers')->default(0);
             $table->timestamps();
         });
 
