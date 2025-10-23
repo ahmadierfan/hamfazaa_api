@@ -73,7 +73,7 @@ class ZarinpalController extends Controller
 
         $MSubscription->craete($fk_order);
 
-        $url = 'Location: https://hamfazaa.ir/copanel/paysuccess?orderId=';
+        $url = 'Location: https://hamfazaa.ir/copanel/paysuccess?orderid=';
         $redirect = $url . $fk_order;
 
         header($redirect);
