@@ -63,7 +63,7 @@ class MOrderController extends Controller
         )
             ->join('b_plans', 'b_plans.pk_plan', '=', 'm_orders.fk_plan')
             ->join('b_periods', 'b_periods.pk_period', '=', 'm_orders.fk_period')
-            ->get();
+            ->first();
 
         return $data;
     }
