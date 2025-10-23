@@ -68,6 +68,10 @@ class MVerificationcodeController extends Controller
 
         $MSubscription->createTrial($user);
 
+        $message = "به همفضا خوش اومدین. اگه موردی بود که می خواستین با ما مطرح کنین با این شماره تماس بگیرین. 02128427044";
+
+        $this->sendSms($message, $sendedto);
+
         return $Auth->optLogin($user);
     }
 
@@ -88,10 +92,6 @@ class MVerificationcodeController extends Controller
         $code->update(['is_used' => true]);
 
         $user = $User->showManagerWithMobile($sendedto);
-
-        $message = "به همفضا خوش اومدین. اگه موردی بود که می خواستین با ما مطرح کنین با این شماره تماس بگیرین. 02128427044";
-
-        $this->sendSms($message, $sendedto);
 
         return $Auth->optLogin($user);
     }
