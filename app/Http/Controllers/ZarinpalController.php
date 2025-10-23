@@ -13,7 +13,7 @@ class ZarinpalController extends Controller
     {
         // مشخصات تراکنش
         $amount = $price; // مبلغ به ریال
-        $callback_url = url('/callback'); // آدرس بازگشت
+        $callback_url = 'https://api.hamfazaa.ir/api/callback'; // آدرس بازگشت
         $description = (string) $ordernumber;
         $metadata = [];
 
