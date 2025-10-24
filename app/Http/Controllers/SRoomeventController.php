@@ -12,18 +12,7 @@ class SRoomeventController extends Controller
 {
     use ResponseTrait;
 
-    function eventRequirement(MRoomController $MRoom, UserController $Users)
-    {
-        $rooms = $MRoom->forCompany();
-        $users = $Users->forCompany();
-
-        $res = [
-            "rooms" => $rooms,
-            "users" => $users,
-        ];
-
-        return $res;
-    }
+    //company
     function forCompany()
     {
         $data = s_roomevent::select('pk_roomevent', 'users.name', 'fk_room', 'startdatetime', 'enddatetime')
@@ -44,10 +33,16 @@ class SRoomeventController extends Controller
             'enddatetime' => 'required',
         ]);
 
+
         $fk_user = $validated['fk_user'];
         $startDateTime = date('Y-m-d H:i:s', strtotime($validated['startdatetime']));
         $endDateTime = date('Y-m-d H:i:s', strtotime($validated['enddatetime']));
         $fk_room = $validated['fk_room'];
+
+        $room = $MRoom->justShow($fk_room);
+        if ($room->fk_company != auth()->user()->fk_company)
+            return $this->clientErrorResponse("Company??");
+
 
         $pk_roomevent = null;
         if (isset($request->id))
@@ -64,9 +59,6 @@ class SRoomeventController extends Controller
         $roomendtime = $room->endtime;
 
         $userTotalHoursInWeek = $this->userTotalHoursInWeek($fk_user, $startDateTime);
-
-        if ($maxhoursperweek < $userTotalHoursInWeek)
-            return $this->clientErrorResponse("سقف ساعت در هفته به پایان رسید به پایان رسیده");
 
         $eventStartTime = Carbon::parse($startDateTime)->format('H:i:s');
         $eventEndTime = Carbon::parse($endDateTime)->format('H:i:s');
@@ -109,6 +101,33 @@ class SRoomeventController extends Controller
 
         return $conflictingEvents;
     }
+
+    function comapnyDelete(Request $request)
+    {
+        $id = $request->id;
+
+        // پیدا کردن ایونت
+        $event = s_roomevent::find($id);
+
+        if (!$event) {
+            return $this->clientErrorResponse("رویداد پیدا نشد");
+        }
+
+        // بررسی زمان پایان ایونت
+        $now = Carbon::now();
+        $eventEndTime = Carbon::parse($event->enddatetime);
+
+        // اگر زمان پایان ایونت گذشته باشد، اجازه حذف نده
+        if ($eventEndTime->lt($now)) {
+            return $this->clientErrorResponse("امکان حذف رویدادهای گذشته وجود ندارد");
+        }
+
+        s_roomevent::destroy($id);
+
+        return response()->json(['success' => true, 'message' => 'رویداد با موفقیت حذف شد']);
+    }
+
+    //user
     function userTotalHoursInWeek($fk_user, $startDateTime)
     {
         $start = Carbon::parse($startDateTime);
@@ -126,14 +145,14 @@ class SRoomeventController extends Controller
         foreach ($events as $event) {
             $startEvent = Carbon::parse($event->startdatetime);
             $endEvent = Carbon::parse($event->enddatetime);
-            $hours = $endEvent->floatDiffInHours($startEvent); // بهتر برای دقت زمانی
+            $hours = $endEvent->floatDiffInHours($startEvent); // استفاده از floatDiffInHours برای دقت بیشتر
             $totalHours += $hours;
         }
 
         return $totalHours;
     }
 
-    function userCreateUpdate(Request $request, MRoomController $MRoom)
+    function userCreateUpdate(Request $request, MRoomController $MRoom, MWallettransactionController $MWallettransaction)
     {
         $validated = $request->validate([
             'id' => 'nullable',
@@ -158,19 +177,44 @@ class SRoomeventController extends Controller
 
         $room = $MRoom->justShow($validated['fk_room']);
         $maxhoursperweek = $room->maxhoursperweek;
+        $amountperhour = $room->amountperhour;
         $roomstarttime = $room->starttime;
         $roomendtime = $room->endtime;
 
+        // محاسبه ساعت‌های استفاده شده در هفته
         $userTotalHoursInWeek = $this->userTotalHoursInWeek($fk_user, $startDateTime);
 
-        if ($maxhoursperweek < $userTotalHoursInWeek)
-            return $this->clientErrorResponse("سقف ساعت در هفته به پایان رسید به پایان رسیده");
+        // محاسبه ساعت‌های درخواستی برای رزرو جدید
+        $startDateTimeCarbon = Carbon::parse($startDateTime);
+        $endDateTimeCarbon = Carbon::parse($endDateTime);
+        $requestedHours = $endDateTimeCarbon->floatDiffInHours($startDateTimeCarbon);
+
+        // محاسبه کل ساعت‌ها پس از رزرو جدید
+        $totalHoursAfterReservation = $userTotalHoursInWeek + $requestedHours;
 
         $eventStartTime = Carbon::parse($startDateTime)->format('H:i:s');
         $eventEndTime = Carbon::parse($endDateTime)->format('H:i:s');
 
         if ($eventStartTime < $roomstarttime || $eventEndTime > $roomendtime)
             return $this->clientErrorResponse("در محدوده ساعت کاری اتاق انتخاب نمایید");
+
+        // بررسی اگر کل ساعت‌ها بعد از رزرو از سقف مجاز بیشتر شود
+        if ($totalHoursAfterReservation > $maxhoursperweek) {
+
+            $userBallance = $MWallettransaction->userBallance($fk_user);
+
+            // محاسبه ساعت‌های اضافی که باید پرداخت شوند
+            $extraHours = $totalHoursAfterReservation - $maxhoursperweek;
+
+            // محاسبه مبلغ مورد نیاز برای ساعت‌های اضافی
+            $requiredAmount = ($extraHours * $amountperhour);
+
+            if ((int) $userBallance < (int) $requiredAmount)
+                return $this->clientErrorResponse("برای رزرو این بازه زمانی نیاز به شارژ کیف پول دارید. مبلغ مورد نیاز: " . number_format($requiredAmount) . " ریال");
+
+            // کسر مبلغ از کیف پول
+            $MWallettransaction->decreaseForReserve($fk_user, $requiredAmount);
+        }
 
         s_roomevent::updateOrCreate(
             [
@@ -185,19 +229,51 @@ class SRoomeventController extends Controller
             ]
         );
 
-        return response()->json(['success' => true, 'maxhoursperweek' => $maxhoursperweek, 'userTotalHoursInWeek' => $userTotalHoursInWeek, 'message' => 'رویداد با موفقیت ذخیره شد']);
+        return response()->json([
+            'success' => true,
+            'maxhoursperweek' => $maxhoursperweek,
+            'userTotalHoursInWeek' => $userTotalHoursInWeek,
+            'totalHoursAfterReservation' => $totalHoursAfterReservation,
+            'message' => 'رویداد با موفقیت ذخیره شد'
+        ]);
     }
 
     function userDelete(Request $request)
     {
         $id = $request->id;
 
-        s_roomevent::destroy($id);
-    }
-    function comapnyDelete(Request $request)
-    {
-        $id = $request->id;
+        // پیدا کردن ایونت
+        $event = s_roomevent::find($id);
+
+        if (!$event) {
+            return $this->clientErrorResponse("رویداد پیدا نشد");
+        }
+
+        // بررسی زمان پایان ایونت
+        $now = Carbon::now();
+        $eventEndTime = Carbon::parse($event->enddatetime);
+
+        // اگر زمان پایان ایونت گذشته باشد، اجازه حذف نده
+        if ($eventEndTime->lt($now)) {
+            return $this->clientErrorResponse("امکان حذف رویدادهای گذشته وجود ندارد");
+        }
 
         s_roomevent::destroy($id);
+
+        return response()->json(['success' => true, 'message' => 'رویداد با موفقیت حذف شد']);
+    }
+
+    //public
+    function eventRequirement(MRoomController $MRoom, UserController $Users)
+    {
+        $rooms = $MRoom->forCompany();
+        $users = $Users->forCompany();
+
+        $res = [
+            "rooms" => $rooms,
+            "users" => $users,
+        ];
+
+        return $res;
     }
 }

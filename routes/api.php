@@ -8,7 +8,7 @@ use App\Http\Controllers\MRoomController;
 use App\Http\Controllers\ZarinpalController;
 use App\Http\Controllers\MOrderController;
 use App\Http\Controllers\BPlanController;
-
+use App\Http\Controllers\MWallettransactionController;
 
 Route::post('/pay', [MOrderController::class, 'create']);
 Route::get('/callback', [ZarinpalController::class, 'callback']);
@@ -20,7 +20,6 @@ Route::middleware(['auth:api', 'userPermission'])->group(function () {
     Route::get('company-users', [UserController::class, 'forCompany']);
     Route::post('company-create-update-user', [UserController::class, 'createUpdate']);
     Route::post('company-delete-user', [UserController::class, 'delete']);
-
 
     //room
     Route::get('company-active-rooms', [MRoomController::class, 'activeRomms']);
@@ -37,6 +36,14 @@ Route::middleware(['auth:api', 'userPermission'])->group(function () {
 
     Route::post('user-create-update-event', [SRoomeventController::class, 'userCreateUpdate']);
     Route::post('user-delete-event', [SRoomeventController::class, 'userDelete']);
+
+    //wallet 
+    Route::get('user-wallet-transactions', [MWallettransactionController::class, 'userTransactions']);
+    Route::get('company-wallet-transactions', [MWallettransactionController::class, 'companyTransactions']);
+    Route::post('company-wallet-create', [MWallettransactionController::class, 'customerPayForWalletTransactionOfReception']);
+    Route::post('user-increase-wallet', [MWallettransactionController::class, 'userIncrease']);
+    Route::post('update-transaction-payment-status', [MWallettransactionController::class, 'updateTransactionStatus']);
+
 });
 
 Route::middleware(['auth:api'])->group(function () {

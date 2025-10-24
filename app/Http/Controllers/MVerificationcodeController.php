@@ -47,32 +47,40 @@ class MVerificationcodeController extends Controller
     }
     function companyRegisterVerify(Request $request, UserController $User, AuthController $Auth, MSubscriptionController $MSubscription)
     {
-        $request->validate([
-            'sendedto' => 'required|string|max:20',
-            'name' => 'required|string'
-        ]);
-        $sendedto = $request->input('sendedto');
-        $name = $request->input('name');
-        $verificationcode = $request->input('verificationcode');
+        DB::beginTransaction();
+        try {
 
-        $code = $this->justVerify($sendedto, $verificationcode);
-        if (!$code)
-            return $this->serverErrorResponse(__('messages.error.code_invalid'));
+            $request->validate([
+                'sendedto' => 'required|string|max:20',
+                'name' => 'required|string'
+            ]);
+            $sendedto = $request->input('sendedto');
+            $name = $request->input('name');
+            $verificationcode = $request->input('verificationcode');
 
-        $code->update(['is_used' => true]);
+            $code = $this->justVerify($sendedto, $verificationcode);
+            if (!$code)
+                return $this->serverErrorResponse(__('messages.error.code_invalid'));
 
-        $user = $User->showWithColumn('mobile', $sendedto);
+            $code->update(['is_used' => true]);
 
-        if (!$user)
-            $user = $User->managerCreateWithMobile($sendedto, $name);
+            $user = $User->showWithColumn('mobile', $sendedto);
 
-        $MSubscription->createTrial($user);
+            if (!$user)
+                $user = $User->managerCreateWithMobile($sendedto, $name);
 
-        $message = "به همفضا خوش اومدین. اگه موردی بود که می خواستین با ما مطرح کنین با این شماره تماس بگیرین. 02128427044";
+            $MSubscription->createTrial($user);
+            $message = "به همفضا خوش اومدین. اگه موردی بود که می خواستین با ما مطرح کنین با این شماره تماس بگیرین. 02128427044";
+            $this->sendSms($message, $sendedto);
+            $optLogin = $Auth->optLogin($user);
 
-        $this->sendSms($message, $sendedto);
+            DB::commit();
 
-        return $Auth->optLogin($user);
+            return $optLogin;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
     }
 
     function companyLogin(Request $request, UserController $User, AuthController $Auth, MSubscriptionController $MSubscription)
@@ -82,7 +90,7 @@ class MVerificationcodeController extends Controller
             'verificationcode' => 'required',
         ]);
         $sendedto = $request->input('sendedto');
-        $code = $request->input('code');
+        $code = $request->input('verificationcode');
 
         $code = $this->justVerify($sendedto, $code);
 

@@ -105,7 +105,16 @@ class UserController extends Controller
     }
     function delete(Request $request)
     {
+        $validated = $request->validate([
+            'userId' => 'required',
+        ]);
+
         $userId = $request->userId;
+
+        $user = $this->showWithColumn('id', $userId);
+
+        if ($user->fk_company != auth()->user()->fk_company)
+            return $this->clientErrorResponse("Company??");
 
         User::destroy($userId);
     }
