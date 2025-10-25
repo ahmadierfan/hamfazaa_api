@@ -56,7 +56,7 @@ class MSubscriptionController extends Controller
             ->orderByDesc('enddate')
             ->first();
         if (!$subscription) {
-            $message = _('messages.error.subscription_not_found');
+            $message = __('messages.error.subscription_not_found');
             $code = 2;
         }
         $today = Carbon::today();
