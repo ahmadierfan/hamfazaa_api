@@ -50,6 +50,7 @@ class MSubscriptionController extends Controller
     function checkCompanySub($userCompanyId)
     {
         $code = 1;
+        $message = null;
 
         $subscription = DB::table('m_subscriptions')
             ->where('fk_company', $userCompanyId)
