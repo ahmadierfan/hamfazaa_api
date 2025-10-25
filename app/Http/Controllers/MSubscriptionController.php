@@ -58,11 +58,12 @@ class MSubscriptionController extends Controller
         if (!$subscription) {
             $message = __('messages.error.subscription_not_found');
             $code = 2;
-        }
-        $today = Carbon::today();
-        if ($today->gt(Carbon::parse($subscription->enddate))) {
-            $message = __('messages.error.subscription_expired');
-            $code = 2;
+        } else {
+            $today = Carbon::today();
+            if ($today->gt(Carbon::parse($subscription->enddate))) {
+                $message = __('messages.error.subscription_expired');
+                $code = 2;
+            }
         }
 
         return [
