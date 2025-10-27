@@ -13,8 +13,6 @@ class CreateBPeriodTable extends Migration
             $table->string('period', 255)->charset('utf8mb4')->collation('utf8mb4_persian_ci');
             $table->timestamps();
         });
-
-
     }
 
     public function down()

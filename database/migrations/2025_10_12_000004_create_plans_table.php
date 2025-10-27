@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('plan');
             $table->string('subtitle');
             $table->integer('maxusers')->default(0);
-            $table->integer('max_room')->default(0);
+            $table->integer('maxroom')->default(0);
             $table->json('price')->nullable();
             $table->json('options')->nullable();
             $table->longText('icon')->nullable();

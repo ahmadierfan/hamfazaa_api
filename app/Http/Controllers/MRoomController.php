@@ -58,7 +58,6 @@ class MRoomController extends Controller
             "endtime" => "required|date_format:H:i|after:starttime",
             "availabledays" => "required|array",
             "availabledays.*" => "string|in:saturday,sunday,monday,tuesday,wednesday,thursday,friday",
-            "maxhoursperuser" => "required|integer|min:1",
             "isactive" => "required",
             "description" => "nullable|string",
             "maxhoursperweek" => "required|integer|min:1",
@@ -84,7 +83,6 @@ class MRoomController extends Controller
             'starttime' => $validated['starttime'],
             'endtime' => $validated['endtime'],
             'availabledays' => json_encode($validated['availabledays']),
-            'maxhoursperuser' => $validated['maxhoursperuser'],
             'isactive' => $validated['isactive'],
             'description' => $validated['description'] ?? ''
         ];

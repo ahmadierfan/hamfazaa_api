@@ -20,7 +20,6 @@ return new class extends Migration {
             $table->time('starttime');
             $table->time('endtime');
             $table->json('availabledays');
-            $table->integer('maxhoursperuser')->default(1);
             $table->bigInteger('amountperhour')->default(0);
             $table->text('description')->nullable();
             $table->tinyInteger('isactive')->default(1);

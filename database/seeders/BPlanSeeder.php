@@ -20,7 +20,7 @@ class BPlanSeeder extends Seeder
                 'plan' => 'آزمایشی',
                 'subtitle' => 'آزمایشی',
                 'maxusers' => 5,
-                'max_room' => 1,
+                'maxroom' => 1,
                 'price' => null,
                 'icon' => '',
                 'options' => json_encode([
@@ -39,7 +39,7 @@ class BPlanSeeder extends Seeder
                 'plan' => 'پایه',
                 'subtitle' => 'تیم های کوچک',
                 'maxusers' => 15,
-                'max_room' => 3,
+                'maxroom' => 3,
                 'price' => json_encode([
                     4800000,
                     3840000,
@@ -68,7 +68,7 @@ class BPlanSeeder extends Seeder
                 'plan' => 'حرفه‌ای',
                 'subtitle' => 'شرکتی',
                 'maxusers' => 50,
-                'max_room' => 7,
+                'maxroom' => 7,
                 'price' => json_encode([
                     12000000,
                     9600000,
@@ -97,7 +97,7 @@ class BPlanSeeder extends Seeder
                 'plan' => 'پیشرفته',
                 'subtitle' => 'سازمانی',
                 'maxusers' => 150,
-                'max_room' => 35, // نامحدود
+                'maxroom' => 35, // نامحدود
                 'price' => json_encode([
                     24000000,
                     19200000,
