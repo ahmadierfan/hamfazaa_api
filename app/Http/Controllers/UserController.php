@@ -33,7 +33,6 @@ class UserController extends Controller
             $data = User::select(
                 'users.id',
                 'users.name',
-                'users.lastname',
                 'users.mobile',
                 'users.isactive',
                 DB::raw("SUBSTR(users.created_at, 1, 10) as createddate"),
@@ -86,22 +85,30 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
-            'lastname' => 'required|string',
             'mobile' => 'required|string',
+            'isactive' => 'sometimes|integer|in:0,1' // اضافه کردن validation برای isactive
         ]);
+
+        $updateData = [
+            'name' => $validated['name'],
+            'mobile' => $validated['mobile'],
+            "fk_company" => auth()->user()->fk_company
+        ];
+
+        // اگر isactive ارسال شده باشد، آن را هم اضافه کنید
+        if (isset($validated['isactive'])) {
+            $updateData['isactive'] = $validated['isactive'];
+        }
 
         User::updateOrCreate(
             [
                 "mobile" => $validated['mobile'],
                 "fk_company" => auth()->user()->fk_company
             ],
-            [
-                "mobile" => $validated['mobile'],
-                'name' => $validated['name'],
-                'lastname' => $validated['lastname'],
-                "fk_company" => auth()->user()->fk_company
-            ]
+            $updateData
         );
+
+        return response()->json(['success' => true, 'message' => 'کاربر با موفقیت ذخیره شد']);
     }
     function delete(Request $request)
     {

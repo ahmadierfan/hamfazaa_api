@@ -33,7 +33,7 @@ class MSubscriptionController extends Controller
         $BPlan = new BPlanController();
         $startdate = Carbon::now();
 
-        $enddate = $startdate->copy()->addDays(7);
+        $enddate = $startdate->copy()->addDays(60);
 
         $plan = $BPlan->justShow(1);
 
