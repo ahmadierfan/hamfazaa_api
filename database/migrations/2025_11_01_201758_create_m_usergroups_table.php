@@ -10,17 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('m_rooms', function (Blueprint $table) {
-            $table->bigIncrements('pk_room');
+        Schema::create('m_usergroups', function (Blueprint $table) {
+            $table->bigIncrements('pk_usergroup');
             $table->foreignId('fk_registrar')->constrained('users');
-            $table->string('room');
-            $table->integer('capacity')->default(1);
-            $table->time('starttime');
-            $table->time('endtime');
-            $table->json('availabledays');
+            $table->string('usergroup');
             $table->text('description')->nullable();
-            $table->tinyInteger('isactive')->default(1);
-            $table->string('status')->default('active');
             $table->timestamps();
         });
     }
@@ -30,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('m_rooms');
+        Schema::dropIfExists('m_usergroups');
     }
 };

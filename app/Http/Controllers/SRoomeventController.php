@@ -152,7 +152,7 @@ class SRoomeventController extends Controller
         return $totalHours;
     }
 
-    function userCreateUpdate(Request $request, MRoomController $MRoom, MWallettransactionController $MWallettransaction)
+    function userCreateUpdate(Request $request, MRoomController $MRoom, MWallettransactionController $MWallettransaction, RUsergrouproomController $RUsergrouproom)
     {
         $validated = $request->validate([
             'id' => 'nullable',
@@ -176,8 +176,8 @@ class SRoomeventController extends Controller
             return $this->clientErrorResponse("در این بازه زمانی اتاق قبلاً رزرو شده است");
 
         $room = $MRoom->justShow($validated['fk_room']);
-        $maxhoursperweek = $room->maxhoursperweek;
-        $amountperhour = $room->amountperhour;
+        $roomDataForUser = $RUsergrouproom->getRoomDataForUser($fk_room, $fk_user);
+
         $roomstarttime = $room->starttime;
         $roomendtime = $room->endtime;
 
@@ -198,8 +198,14 @@ class SRoomeventController extends Controller
         if ($eventStartTime < $roomstarttime || $eventEndTime > $roomendtime)
             return $this->clientErrorResponse("در محدوده ساعت کاری اتاق انتخاب نمایید");
 
+        if (!isset($roomDataForUser->maxhoursperweek))
+            return $this->clientErrorResponse("به این اتاق دسترسی ندارید");
+
+        $maxhoursperweek = $roomDataForUser->maxhoursperweek;
+
         // بررسی اگر کل ساعت‌ها بعد از رزرو از سقف مجاز بیشتر شود
         if ($totalHoursAfterReservation > $maxhoursperweek) {
+            $amountperhour = $roomDataForUser->amountperhour;
 
             $userBallance = $MWallettransaction->userBallance($fk_user);
 
@@ -237,6 +243,7 @@ class SRoomeventController extends Controller
             'message' => 'رویداد با موفقیت ذخیره شد'
         ]);
     }
+
 
     function userDelete(Request $request)
     {

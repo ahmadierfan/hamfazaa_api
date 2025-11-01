@@ -9,6 +9,7 @@ use App\Http\Controllers\ZarinpalController;
 use App\Http\Controllers\MOrderController;
 use App\Http\Controllers\BPlanController;
 use App\Http\Controllers\MWallettransactionController;
+use App\Http\Controllers\MUsergroupController;
 
 Route::post('/pay', [MOrderController::class, 'create']);
 Route::get('/callback', [ZarinpalController::class, 'callback']);
@@ -16,6 +17,11 @@ Route::get('/plans', [BPlanController::class, 'index']);
 
 
 Route::middleware(['auth:api', 'userPermission'])->group(function () {
+    //users group
+    Route::get('company-usergroups', [MUsergroupController::class, 'forCompany']);
+    Route::post('company-create-update-usergroup', [MUsergroupController::class, 'createUpdate']);
+    Route::post('company-delete-usergroup', [MUsergroupController::class, 'delete']);
+
     //users 
     Route::get('company-users', [UserController::class, 'forCompany']);
     Route::post('company-create-update-user', [UserController::class, 'createUpdate']);

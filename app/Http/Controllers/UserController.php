@@ -29,8 +29,11 @@ class UserController extends Controller
     }
     function forCompany()
     {
+        $MUsergroup = new MUsergroupController();
         if (isset(auth()->user()->fk_company)) {
-            $data = User::select(
+            $userGroups = $MUsergroup->forCompany();
+
+            $users = User::select(
                 'users.id',
                 'users.name',
                 'users.mobile',
@@ -42,7 +45,20 @@ class UserController extends Controller
                 ->where('fk_company', auth()->user()->fk_company)
                 ->get();
 
-            return $data;
+            // اضافه کردن اطلاعات گروه‌های کاربری برای هر کاربر
+            $users->each(function ($user) {
+                $user->userusergroup = DB::table('r_userusergroups')
+                    ->where('fk_user', $user->id)
+                    ->pluck('fk_usergroup')
+                    ->toArray();
+            });
+
+            $res = [
+                'userGroups' => $userGroups,
+                'users' => $users,
+            ];
+
+            return $res;
         }
     }
 
@@ -81,34 +97,63 @@ class UserController extends Controller
 
         return $user;
     }
-    function createUpdate(Request $request)
+    function createUpdate(Request $request, RUserusergroupController $RUserusergroup)
     {
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'mobile' => 'required|string',
-            'isactive' => 'sometimes|integer|in:0,1' // اضافه کردن validation برای isactive
-        ]);
+        DB::beginTransaction();
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string',
+                'mobile' => 'required|string',
+                'isactive' => 'sometimes|integer|in:0,1',
+                'userusergroup' => 'array',
+            ]);
 
-        $updateData = [
-            'name' => $validated['name'],
-            'mobile' => $validated['mobile'],
-            "fk_company" => auth()->user()->fk_company
-        ];
-
-        // اگر isactive ارسال شده باشد، آن را هم اضافه کنید
-        if (isset($validated['isactive'])) {
-            $updateData['isactive'] = $validated['isactive'];
-        }
-
-        User::updateOrCreate(
-            [
-                "mobile" => $validated['mobile'],
+            $updateData = [
+                'name' => $validated['name'],
+                'mobile' => $validated['mobile'],
                 "fk_company" => auth()->user()->fk_company
-            ],
-            $updateData
-        );
+            ];
 
-        return response()->json(['success' => true, 'message' => 'کاربر با موفقیت ذخیره شد']);
+            // اگر isactive ارسال شده باشد، آن را هم اضافه کنید
+            if (isset($validated['isactive'])) {
+                $updateData['isactive'] = $validated['isactive'];
+            }
+
+            $data = User::updateOrCreate(
+                [
+                    "mobile" => $validated['mobile'],
+                    "fk_company" => auth()->user()->fk_company
+                ],
+                $updateData
+            );
+            $fk_user = $data->id;
+
+
+            $userusergroup = $request->userusergroup;
+            if (count($request->userusergroup) != 0) {
+                $dataForInsert = [];
+                foreach ($userusergroup as $value) {
+                    $newData['fk_registrar'] = auth()->user()->id;
+                    $newData['fk_usergroup'] = $value;
+                    $newData['fk_user'] = $fk_user;
+                    $newData['created_at'] = now();
+                    $newData['updated_at'] = now();
+
+                    array_push($dataForInsert, $newData);
+                }
+
+                $RUserusergroup->updateCreate($fk_user, $dataForInsert);
+            } else
+                $RUserusergroup->deleteByUser($fk_user);
+
+
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'کاربر با موفقیت ذخیره شد']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
     }
     function delete(Request $request)
     {
